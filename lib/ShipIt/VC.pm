@@ -4,6 +4,7 @@ use ShipIt::VC::SVN;
 use ShipIt::VC::SVK;
 use ShipIt::VC::Git;
 use ShipIt::VC::Mercurial;
+use ShipIt::Util qw(find_subclasses);
 
 =head1 NAME
 
@@ -38,7 +39,7 @@ memoized (er, singleton) instance of ShipIt::VC->new.
 sub new {
     my ($class, $conf) = @_;
     return ShipIt::VC::SVN->new($conf) if $class->is_svn_co;
-    return ShipIt::VC::Git->new($conf) if -e ".git";
+    return ShipIt::VC::Git->new($conf) if $class->is_git_co;
     return ShipIt::VC::Mercurial->new($conf) if -e ".hg";
     return ShipIt::VC::SVK->new($conf) if $class->is_svk_co;
     
@@ -62,7 +63,15 @@ sub is_svk_co {
 sub is_svn_co {
     my $class = shift;
 
+    return 1 if (-d ".svn");
     return system("svn info >/dev/null 2>/dev/null") == 0;
+}
+
+sub is_git_co {
+    my $class = shift;
+
+    return 1 if (-d ".git");
+    return system("git status >/dev/null 2>/dev/null") == 0;
 }
 
 =head1 ABSTRACT METHODS
